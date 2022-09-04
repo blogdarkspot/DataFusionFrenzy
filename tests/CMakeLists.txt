@@ -17,7 +17,7 @@ macro(package_add_test_with_libraries TESTNAME FILES LIBRARIES TEST_WORKING_DIRE
     set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
 endmacro()
 
-package_add_test_with_libraries(sample_test sample_test.cpp template::sample "")
+package_add_test_with_libraries(conflation_test conflation_tests.cpp conflation::conflation "")
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     include(CodeCoverage)
@@ -29,19 +29,19 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     # Works
     setup_target_for_coverage_gcovr_xml(
             NAME TestSampleCoverageXml
-            EXECUTABLE sample_test 
-            DEPENDENCIES sample_test template::sample 
+            EXECUTABLE conflation_test 
+            DEPENDENCIES conflation_test conflation::conflation 
     )
     # Works
     setup_target_for_coverage_gcovr_html(
             NAME TestSampleCoverageHtml
-            EXECUTABLE sample_test 
-            DEPENDENCIES sample_test template::sample 
+            EXECUTABLE conflation_test 
+            DEPENDENCIES conflation_test conflation::conflation 
     )
     # This one did not work for me:
     setup_target_for_coverage_lcov(
             NAME TestSampleCoverageLcov
-            EXECUTABLE sample_test 
-            DEPENDENCIES sample_test template::sample 
+            EXECUTABLE conflation_test 
+            DEPENDENCIES conflation_test conflation::conflation 
     )
 endif ()
