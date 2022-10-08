@@ -54,8 +54,8 @@ namespace conflation
 				{
 					
 					ret.emplace_back(book::make_command(book::OPERATION::DELETE_THRU,
-									value2->position + delta,
-									value2->position));
+									inserts + value2->position + delta,
+									inserts + value2->position));
 
 					b0_delta += delta;
 									
@@ -71,6 +71,12 @@ namespace conflation
 				++inserts;	
 				++b0_delta;
 			}
+		}
+		if((b0->size() + b0_delta) > b1->size())
+		{
+			ret.emplace_back(book::make_command(book::OPERATION::DELETE_THRU,
+						b1->size() +  1,
+						b0->size() + b0_delta + 1));
 		}
 		return ret;
 	}

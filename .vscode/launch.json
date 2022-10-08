@@ -8,17 +8,15 @@
             "type": "lldb",
             "request": "launch",
             "name": "Exec Debug",
-            "program": "${workspaceFolder}/build/src/sample.bin",
-            "args": [],
-            "cwd": "${workspaceFolder}/data"
+            "program": "${workspaceFolder}/build/tests/conflation_test",
+            "args": []
         },
         {
             "type": "lldb",
             "request": "launch",
             "name": "Unit Test Debug",
-            "program": "${workspaceFolder}/build/tests/sample_test",
+            "program": "${workspaceFolder}/build/tests/conflation_test",
             "args": [],
-            "cwd": "${workspaceFolder}/data",
             "preLaunchTask": "${defaultBuildTask}"
         }
     ]

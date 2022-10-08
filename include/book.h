@@ -1,6 +1,7 @@
 #ifndef __BOOK__
 #define __BOOK__
 
+#include <cstddef>
 #include <vector>
 #include <set>
 #include <unordered_set>
@@ -106,6 +107,10 @@ namespace book
 			{
 				return nullptr;
 			}
+		}
+
+		std::size_t size() {
+			return _positions.size();
 		}
 		
 
