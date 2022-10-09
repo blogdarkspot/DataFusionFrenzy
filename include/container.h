@@ -1,5 +1,5 @@
-#ifndef __BOOK__
-#define __BOOK__
+#ifndef _CONTAINER_
+#define _CONTAINER_
 
 #include <cstddef>
 #include <vector>
@@ -9,9 +9,9 @@
 #include <algorithm>
 #include <iostream>
 
-namespace book
+namespace conflation::container
 {
-	struct ordem_snapshot
+	struct entry 
 	{
 		int position;
 		int id;
@@ -61,11 +61,11 @@ namespace book
 	};
 
 	template<class T>
-	class BookSnapshot
+	class Snapshot
 	{
 		public:
 
-		BookSnapshot(typename std::vector<std::shared_ptr<T>>::iterator begin,
+		Snapshot(typename std::vector<std::shared_ptr<T>>::iterator begin,
 						typename std::vector<std::shared_ptr<T>>::iterator end)
 		{
 			int pos = 0;
@@ -74,7 +74,7 @@ namespace book
 			_ordens.reserve(size);
 			for(auto i = begin; i != end; ++i)
 			{
-				auto ord = std::make_shared<ordem_snapshot>();
+				auto ord = std::make_shared<entry>();
 				ord->id = (*i)->_id;
 				ord->position = ++pos;
 
@@ -84,18 +84,18 @@ namespace book
 		}	
 
 		
-		std::vector<std::shared_ptr<ordem_snapshot>>::iterator begin()
+		std::vector<std::shared_ptr<entry>>::iterator begin()
 		{
 			return _positions.begin();
 		}
 
-		std::vector<std::shared_ptr<ordem_snapshot>>::iterator end()
+		std::vector<std::shared_ptr<entry>>::iterator end()
 		{
 			return _positions.end();
 		}
 
 		
-		std::shared_ptr<ordem_snapshot> find(const std::shared_ptr<ordem_snapshot>& ordem)
+		std::shared_ptr<entry> find(const std::shared_ptr<entry>& ordem)
 		{
 			auto value = _ordens.find(ordem);
 
@@ -116,8 +116,8 @@ namespace book
 
 		private:
 
-		std::vector<std::shared_ptr<ordem_snapshot>> _positions;
-		std::unordered_set<std::shared_ptr<ordem_snapshot>, Hash, Compare> _ordens;
+		std::vector<std::shared_ptr<entry>> _positions;
+		std::unordered_set<std::shared_ptr<entry>, Hash, Compare> _ordens;
 	};
 
 };

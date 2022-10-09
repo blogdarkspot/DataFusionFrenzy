@@ -1,9 +1,10 @@
-#include "book.h"
+#include "container.h"
 #include "conflation.h"
 #include "gtest/gtest.h"
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <atomic>
 
 class Ordem
 {
@@ -11,9 +12,24 @@ class Ordem
     Ordem(int id, float price) : _id(id), _price(price)
     {
     }
+
+    Ordem(float price) : _price(price)
+    {
+        _id = generate_id();
+    }
     int _id;
     float _price;
+
+   private:
+        static std::atomic<int> _count;
+
+        int generate_id()
+        {
+            return _count.fetch_add(1);
+        }
 };
+
+std::atomic<int> Ordem::_count = 0;
 
 class ConflationTest : public ::testing::Test
 {
@@ -56,14 +72,14 @@ class ConflationTest : public ::testing::Test
     std::vector<std::shared_ptr<Ordem>> _b1;
 };
 
-static void check_book(const std::vector<book::command> &commands, std::vector<std::shared_ptr<Ordem>> &b0, 
+static void check_book(const std::vector<conflation::container::command> &commands, std::vector<std::shared_ptr<Ordem>> &b0, 
 		 std::vector<std::shared_ptr<Ordem>> &b1)
 {
     for (const auto &command : commands)
     {
         switch (command._type)
         {
-        case book::OPERATION::INSERT: {
+        case conflation::container::OPERATION::INSERT: {
 		for(const auto& value : b1)
 		{
 			if(value->_id == command._id)
@@ -74,7 +90,7 @@ static void check_book(const std::vector<book::command> &commands, std::vector<s
 		}	
             break;
         }
-        case book::OPERATION::DELETE_THRU: {
+        case conflation::container::OPERATION::DELETE_THRU: {
 		b0.erase(b0.begin() + (command._p0 - 1), b0.begin() + (command._p1 -1));
             break;
         }
@@ -91,7 +107,7 @@ static void check_book(const std::vector<book::command> &commands, std::vector<s
 
 TEST_F(ConflationTest, CreateBookSnapshot)
 {
-    auto bookSnap = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bookSnap = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
     int pos = 0;
     for (const auto &value : *bookSnap)
     {
@@ -101,8 +117,8 @@ TEST_F(ConflationTest, CreateBookSnapshot)
 
 TEST_F(ConflationTest, GetDiffTwoBookEquals)
 {
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
     EXPECT_EQ(commands.size(), 0);
@@ -113,8 +129,8 @@ TEST_F(ConflationTest, RemoveFirstPosition)
 {
     _b1.erase(_b1.begin());
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
     EXPECT_EQ(commands.size(), 1);
@@ -127,8 +143,8 @@ TEST_F(ConflationTest, RemoveTwoPositions)
     _b1.erase(_b1.begin() + 5);
     _b1.erase(_b1.begin() + 5);
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
     EXPECT_EQ(commands.size(), 1);
@@ -139,8 +155,8 @@ TEST_F(ConflationTest, InsertOnePosition)
 {
     _b1.insert(_b1.begin(), std::make_shared<Ordem>(10, 0.5));
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 1);
@@ -152,8 +168,8 @@ TEST_F(ConflationTest, InsertTwoPosition)
     _b1.insert(_b1.begin(), std::make_shared<Ordem>(10, 0.5));
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(11, 0.7));
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
@@ -165,8 +181,8 @@ TEST_F(ConflationTest, InsertTwoPositionRemoveOne)
     _b1.insert(_b1.begin(), std::make_shared<Ordem>(10, 0.5));
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(11, 0.7));
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 3);
@@ -178,8 +194,8 @@ TEST_F(ConflationTest, InsertTwoPositionMiddle)
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(10, 1.5));
     _b1.insert(_b1.begin() + 2, std::make_shared<Ordem>(11, 1.7));
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
@@ -191,8 +207,8 @@ TEST_F(ConflationTest, InsertTwoPositionEnd)
     _b1.insert(_b1.end() - 1, std::make_shared<Ordem>(10, 9.5));
     _b1.insert(_b1.end() - 1, std::make_shared<Ordem>(11, 9.7));
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
@@ -204,8 +220,8 @@ TEST_F(ConflationTest, RemoveTwoPositionEnd)
     _b1.erase(_b1.end() - 1);
     _b1.erase(_b1.end() - 1);
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 1);
@@ -218,8 +234,8 @@ TEST_F(ConflationTest, InsertOneRemoveTwoPositionEnd)
     _b1.erase(_b1.end() - 1);
     _b1.erase(_b1.end() - 1);
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
@@ -231,8 +247,8 @@ TEST_F(ConflationTest, InsertOneRemoveOnePositionEnd)
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(10, 1.5));
     _b1.erase(_b1.end() - 1);
 
-    auto bs0 = std::make_shared<book::BookSnapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<book::BookSnapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
     auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
@@ -240,3 +256,85 @@ TEST_F(ConflationTest, InsertOneRemoveOnePositionEnd)
 }
 
 
+TEST_F(ConflationTest, BounduarieTest)
+{
+
+    _b1.erase(_b1.begin());
+    _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(10, 1.5));
+    _b1.erase(_b1.end() - 1);
+    _b1.insert(_b1.end() - 1, std::make_shared<Ordem>(11, 10.5));
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+   // EXPECT_EQ(commands.size(), 2);
+    check_book(commands, _b0, _b1);
+}
+
+TEST_F(ConflationTest, RemoveMiddle)
+{
+
+    _b1.erase(_b1.begin() + 1);
+    _b1.erase(_b1.begin() + 1);
+    _b1.erase(_b1.begin() + 1);
+    _b1.erase(_b1.begin() + 1);
+    _b1.erase(_b1.begin() + 1);
+    _b1.erase(_b1.begin() + 1);
+    _b1.erase(_b1.begin() + 1);
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+   // EXPECT_EQ(commands.size(), 2);
+    check_book(commands, _b0, _b1);
+}
+
+TEST_F(ConflationTest, RemoveOddEntry)
+{
+    _b1.clear();
+    _b0.clear();
+
+    for(int i = 1; i < 256; ++i)
+    {
+        auto pos = std::make_shared<Ordem>(i, i * 1.0);
+        _b0.emplace_back(pos);
+        if(i % 2)
+         _b1.emplace_back(std::make_shared<Ordem>(*pos));
+    }
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+    check_book(commands, _b0, _b1);
+}
+
+TEST_F(ConflationTest, RemoveOddEntryAndInsert)
+{
+    _b1.clear();
+    _b0.clear();
+
+    for(int i = 1; i < 256; ++i)
+    {
+
+        auto pos = std::make_shared<Ordem>(i, i * 1.0);
+        _b0.emplace_back(pos);
+        if(i % 2)
+         _b1.emplace_back(std::make_shared<Ordem>(*pos));
+        else
+        {
+            auto pos1 = std::make_shared<Ordem>(i * 1000, i * 1.0);
+            _b1.emplace_back(pos1);
+        }
+    }
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+    check_book(commands, _b0, _b1);
+}

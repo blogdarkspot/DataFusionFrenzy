@@ -4,17 +4,17 @@
 #include<memory>
 #include<functional>
 #include<vector>
-#include"book.h"
+#include"container.h"
 
 namespace conflation
 {
 	template<class T>
-	static std::vector<book::command> compute_diff(const std::shared_ptr<book::BookSnapshot<T>>& b0, 
-							const std::shared_ptr<book::BookSnapshot<T>>& b1)
+	static std::vector<container::command> compute_diff(const std::shared_ptr<container::Snapshot<T>>& b0, 
+							const std::shared_ptr<container::Snapshot<T>>& b1)
 	{
 		int inserts = 0;
 		int b0_delta = 0;
-		std::vector<book::command> ret;
+		std::vector<container::command> ret;
 
 		for(const auto& value : *b1)
 		{
@@ -22,6 +22,24 @@ namespace conflation
 
 			if(value2)
 			{
+				
+				auto delta = value->position - (value2->position + b0_delta);
+				
+				//se a ordem value b1 estiver contida em b0
+				//e sua posição atual for menor em relação 
+				//ao book b0 então o delta entre as duas ordens
+				//precisa ser removidos
+				if (delta < 0)
+				{
+					
+					ret.emplace_back(container::make_command(container::OPERATION::DELETE_THRU,
+									value2->position + delta + b0_delta,
+									value2->position + b0_delta));
+
+					b0_delta += delta;
+									
+				}
+				/*
 				//se a ordem value b1 estiver contida em b0 
 				//e sua posição atual for maior que relação
 				//a anterior signifca que ocorreu alguns inserts
@@ -32,40 +50,26 @@ namespace conflation
 				//se a diferença entre o delta e o os inserts  gerar
 				//uma diferença estas posições precisam ser removidas
 				//value2->positon até value2->position - |delta - inserts| 
-				auto delta = value->position - (value2->position + b0_delta);
-				if(delta > 0)
+				else if(delta > 0)
 				{
 					auto remove = delta - inserts;
 					if(remove)
 					{
 						
-						ret.emplace_back(book::make_command(book::OPERATION::DELETE_THRU,
-									value2->position - remove,
-									value2->position));
+						ret.emplace_back(container::make_command(container::OPERATION::DELETE_THRU,
+									value2->position + b0_delta - remove,
+									value2->position + b0_delta));
 						b0_delta -= remove;
 									
 					}
 				}
-				//se a ordem value b1 estiver contida em b0
-				//e sua posição atual for menor em relação 
-				//ao book b0 então o delta entre as duas ordens
-				//precisa ser removidos
-				else if (delta < 0)
-				{
-					
-					ret.emplace_back(book::make_command(book::OPERATION::DELETE_THRU,
-									inserts + value2->position + delta,
-									inserts + value2->position));
-
-					b0_delta += delta;
-									
-				}
+				*/
 				inserts = 0;
 			}
 			else
 			{
 				
-				ret.emplace_back(book::make_command(book::OPERATION::INSERT,
+				ret.emplace_back(container::make_command(container::OPERATION::INSERT,
 							value->position, 0, value->id));
 							
 				++inserts;	
@@ -74,7 +78,7 @@ namespace conflation
 		}
 		if((b0->size() + b0_delta) > b1->size())
 		{
-			ret.emplace_back(book::make_command(book::OPERATION::DELETE_THRU,
+			ret.emplace_back(container::make_command(container::OPERATION::DELETE_THRU,
 						b1->size() +  1,
 						b0->size() + b0_delta + 1));
 		}
