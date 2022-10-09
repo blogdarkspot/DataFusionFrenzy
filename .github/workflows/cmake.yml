@@ -21,18 +21,22 @@ jobs:
     - uses: actions/checkout@v3
       with:
         submodules: true
-        gcov: true
+        
 
     # Update references
     - name: Git Sumbodule Update
       run: |
         git pull --recurse-submodules
         git submodule update --remote --recursive
+        
+    - name: Install dependency
+      run: sudo apt-get install lcov
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
+      
 
     - name: Build
       # Build your program with the given configuration
