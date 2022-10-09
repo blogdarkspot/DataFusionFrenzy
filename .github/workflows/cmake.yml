@@ -56,5 +56,11 @@ jobs:
         path: ${{github.workspace}}/build/testout.xml
         reporter: java-junit
         fail-on-error: true
+      
+    - name: Publish Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      if: always()
+      with:
+        junit_files: ${{github.workspace}}/build/testout.xml
  
       
