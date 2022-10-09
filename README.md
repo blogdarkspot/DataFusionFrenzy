@@ -1,3 +1,5 @@
+[![Build](https://github.com/blogdarkspot/conflation/actions/workflows/cmake.yml/badge.svg)](https://github.com/blogdarkspot/conflation/actions/workflows/cmake.yml)
+
 Este algoritmo computa a transformação de um container A em um tempo t a partir de uma foto deste mesmo container no tempo t - x. 
 
 Este algoritmo trabalhar com um container especialmente desenvolvido para mapear elementos através do tempo t - x até t, este container
