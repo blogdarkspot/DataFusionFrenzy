@@ -43,5 +43,6 @@ if (CMAKE_COMPILER_IS_GNUCXX)
             NAME TestSampleCoverageLcov
             EXECUTABLE conflation_test 
             DEPENDENCIES conflation_test conflation::conflation 
+            EXCLUDE "extern/*" "build/*" "/usr/*"
     )
 endif ()

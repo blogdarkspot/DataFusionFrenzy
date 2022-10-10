@@ -22,7 +22,13 @@ namespace conflation
 
 			if(value2)
 			{
-				
+				//NOTA: b0_delta é a soma de todos os deltas ocorridos na operação
+				// isto que dizer que a cada posição analisada o algoritmo assume que
+				// o container já está organizado da posição 1 até p - 1
+				// sendo assim com a soma b0_delta o valor de delta nunca será 
+				// maior que 0. ainda necessito provar matemáticamente.
+				// porem por empirismo até o momento o delta nunca foi maior que 0 
+				// em todas as combinações possíveis .
 				auto delta = value->position - (value2->position + b0_delta);
 				
 				//se a ordem value b1 estiver contida em b0
@@ -39,31 +45,7 @@ namespace conflation
 					b0_delta += delta;
 									
 				}
-				/*
-				//se a ordem value b1 estiver contida em b0 
-				//e sua posição atual for maior que relação
-				//a anterior signifca que ocorreu alguns inserts
-				//então deve-se calcular o delta entre as duas 
-				//posições, se o delta for igual a variável inserts
-				//significa que este delta será ajustado automaticamente
-				//após os envios dos comandos inserts
-				//se a diferença entre o delta e o os inserts  gerar
-				//uma diferença estas posições precisam ser removidas
-				//value2->positon até value2->position - |delta - inserts| 
-				else if(delta > 0)
-				{
-					auto remove = delta - inserts;
-					if(remove)
-					{
-						
-						ret.emplace_back(container::make_command(container::OPERATION::DELETE_THRU,
-									value2->position + b0_delta - remove,
-									value2->position + b0_delta));
-						b0_delta -= remove;
-									
-					}
-				}
-				*/
+				
 				inserts = 0;
 			}
 			else

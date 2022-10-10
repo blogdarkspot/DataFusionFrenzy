@@ -338,3 +338,85 @@ TEST_F(ConflationTest, RemoveOddEntryAndInsert)
 
     check_book(commands, _b0, _b1);
 }
+
+TEST_F(ConflationTest, RemoveOddEntryAndInsertTwo)
+{
+    _b1.clear();
+    _b0.clear();
+
+    for(int i = 1; i < 256; ++i)
+    {
+
+        auto pos = std::make_shared<Ordem>(i, i * 1.0);
+        _b0.emplace_back(pos);
+        if(i % 2)
+        {
+            _b1.emplace_back(std::make_shared<Ordem>(*pos));
+            auto pos1 = std::make_shared<Ordem>(i * 10000, i * 1.0);
+            _b1.emplace_back(pos1);
+        }
+        else
+        {
+            auto pos1 = std::make_shared<Ordem>(i * 1000, i * 1.0);
+            _b1.emplace_back(pos1);
+        }
+    }
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+    check_book(commands, _b0, _b1);
+}
+
+TEST_F(ConflationTest, ReplaceBook)
+{
+    _b1.clear();
+    _b0.clear();
+
+    for(int i = 1; i < 256; ++i)
+    {
+
+        auto pos = std::make_shared<Ordem>(i, i * 1.0);
+        _b0.emplace_back(pos);
+        auto pos1 = std::make_shared<Ordem>(i * 1000, i * 1.0);
+        _b1.emplace_back(pos1);
+    }
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+    check_book(commands, _b0, _b1);
+}
+
+TEST_F(ConflationTest, ReplaceHalfEndBook)
+{
+    _b1.clear();
+    _b0.clear();
+
+    for(int i = 1; i < 256; ++i)
+    {
+
+        auto pos = std::make_shared<Ordem>(i, i * 1.0);
+        _b0.emplace_back(pos);
+        if(i > (256) / 2)
+        {
+            auto pos1 = std::make_shared<Ordem>(i * 1000, i * 1.0);
+            _b1.emplace_back(pos1);
+        }
+        else {
+            _b1.emplace_back(std::make_shared<Ordem>(*pos));
+        }
+        
+    }
+
+    auto bs0 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<conflation::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+
+    auto commands = conflation::compute_diff<Ordem>(bs0, bs1);
+
+    check_book(commands, _b0, _b1);
+}

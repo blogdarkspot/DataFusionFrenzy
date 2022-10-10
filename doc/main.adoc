@@ -1,0 +1,26 @@
+== Conflation 
+
+Biblioteca container conflation.
+
+=== 1. Funcionamento.
+
+Está biblioteca tem como objetivo comparar duas imagens de um mesmo container em tempos
+diferentes e gerar o minimo de operações de INSERÇÃO e REMOVAÇÃO. para o container no tempo
+t0 se transforme neste container no tempo t1.
+
+==== 1.1 Premissas.
+
+Dado duas fotos de um mesmo container X no tempo t0 e t1, podemos afirmar as seguintes regras:
+
+- Se um elemento está contido no container em t0 e também está contido em t1, 
+    não é necessário fazer nada com este elemento.
+- Se um elemento está contido em t0 porém não está contido em t1, este elemento precisa ser
+    removido.
+- Se um elemento está contido em t1 porem não está contido em t0, este elemento precisa ser inserido.
+
+==== 2.1 Confluation Algoritmo.
+
+
+
+
+ 
