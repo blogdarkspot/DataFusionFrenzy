@@ -9,7 +9,7 @@
 #include <algorithm>
 #include <iostream>
 
-namespace conflation::container
+namespace cc::container
 {
 	struct entry 
 	{

@@ -36,12 +36,12 @@ static void BM_Container(benchmark::State& state) {
          c2.emplace_back(std::make_shared<entry>(i * 10));
     }
 
-    auto bs0 = std::make_shared<conflation::container::Snapshot<entry>>(c1.begin(), c1.end());
-    auto bs1 = std::make_shared<conflation::container::Snapshot<entry>>(c2.begin(), c2.end());
+    auto bs0 = std::make_shared<cc::container::Snapshot<entry>>(c1.begin(), c1.end());
+    auto bs1 = std::make_shared<cc::container::Snapshot<entry>>(c2.begin(), c2.end());
 
   for (auto _ : state)
   {
-        auto commands = conflation::compute_diff<entry>(bs0, bs1);
+        auto commands = cc::conflation::compute_diff<entry>(bs0, bs1);
   }
 }
 
@@ -59,12 +59,12 @@ static void BM_CreateContainer(benchmark::State& state) {
          c2.emplace_back(std::make_shared<entry>(i * 10));
     }
 
-    auto bs0 = std::make_shared<conflation::container::Snapshot<entry>>(c1.begin(), c1.end());
-    auto bs1 = std::make_shared<conflation::container::Snapshot<entry>>(c2.begin(), c2.end());
+    auto bs0 = std::make_shared<cc::container::Snapshot<entry>>(c1.begin(), c1.end());
+    auto bs1 = std::make_shared<cc::container::Snapshot<entry>>(c2.begin(), c2.end());
 
   for (auto _ : state)
   {
-    auto bs0 = std::make_shared<conflation::container::Snapshot<entry>>(c1.begin(), c1.end());
+    auto bs0 = std::make_shared<cc::container::Snapshot<entry>>(c1.begin(), c1.end());
   }
 }
 // Register the function as a benchmark
