@@ -6,7 +6,7 @@
 #include<vector>
 #include"container.h"
 
-namespace conflation
+namespace cc::conflation
 {
 	template<class T>
 	static std::vector<container::command> compute_diff(const std::shared_ptr<container::Snapshot<T>>& b0, 
@@ -26,15 +26,12 @@ namespace conflation
 				// isto que dizer que a cada posição analisada o algoritmo assume que
 				// o container já está organizado da posição 1 até p - 1
 				// sendo assim com a soma b0_delta o valor de delta nunca será 
-				// maior que 0. ainda necessito provar matemáticamente.
-				// porem por empirismo até o momento o delta nunca foi maior que 0 
-				// em todas as combinações possíveis .
 				auto delta = value->position - (value2->position + b0_delta);
 				
 				//se a ordem value b1 estiver contida em b0
 				//e sua posição atual for menor em relação 
-				//ao book b0 então o delta entre as duas ordens
-				//precisa ser removidos
+				//ao book b0 então o delta entre as duas posições 
+				//precisam ser removidos
 				if (delta < 0)
 				{
 					

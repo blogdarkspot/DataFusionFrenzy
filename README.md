@@ -54,7 +54,7 @@ void createSnapshot()
     book.push_back(...);
     book.push_back(...);
     book.push_back(...);
-
+    
     auto bs0 = std::make_shared<conflation::Snapshot<Ordem>>(_b0.begin(), _b0.end());
 }
 

@@ -8,3 +8,8 @@ target_include_directories(${LIB_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
 target_compile_features(${LIB_NAME} PUBLIC cxx_std_20)
 
 add_library(conflation::conflation ALIAS ${LIB_NAME})
+
+
+add_executable(Sample)
+target_sources(Sample PRIVATE sample.cpp)
+target_link_libraries(Sample conflation::conflation)
