@@ -94,6 +94,26 @@ struct Compare
 template <class T> class Snapshot
 {
   public:
+	Snapshot(typename std::vector<T>::iterator begin,
+             typename std::vector<T>::iterator end)
+    {
+        int pos = 0;
+        size_t size = end - begin;
+        _positions.reserve(size);
+        _ordens.reserve(size);
+        for (auto i = begin; i != end; ++i)
+        {
+            auto ord = std::make_shared<entry<T>>();
+            ord->id = (*i)._id;
+            ord->position = ++pos;
+			ord->data = std::make_shared<T>();
+			*(ord->data) = *i;
+
+            _positions.emplace_back(ord);
+            _ordens.insert(ord);
+        }
+    }
+
     Snapshot(typename std::vector<std::shared_ptr<T>>::iterator begin,
              typename std::vector<std::shared_ptr<T>>::iterator end)
     {
