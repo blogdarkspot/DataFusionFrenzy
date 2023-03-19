@@ -10,8 +10,13 @@
 class Ordem
 {
   public:
+    Ordem()
+    {
+        _id = generate_id();
+    }
     Ordem(int id, float price) : _id(id), _price(price)
     {
+        _id = generate_id();
     }
 
     Ordem(float price) : _price(price)
@@ -32,7 +37,7 @@ class Ordem
 
 std::atomic<int> Ordem::_count = 0;
 
-class ccTest : public ::testing::Test
+class dffTest : public ::testing::Test
 {
   protected:
     void SetUp() override
@@ -73,14 +78,14 @@ class ccTest : public ::testing::Test
     std::vector<std::shared_ptr<Ordem>> _b1;
 };
 
-static void check_book(const std::vector<cc::container::command> &commands, std::vector<std::shared_ptr<Ordem>> &b0, 
+static void check_book(const std::vector<dff::container::command<Ordem>> &commands, std::vector<std::shared_ptr<Ordem>> &b0, 
 		 std::vector<std::shared_ptr<Ordem>> &b1)
 {
     for (const auto &command : commands)
     {
         switch (command._type)
         {
-        case cc::container::OPERATION::INSERT: {
+        case dff::container::OPERATION::INSERT: {
 		for(const auto& value : b1)
 		{
 			if(value->_id == command._id)
@@ -91,7 +96,7 @@ static void check_book(const std::vector<cc::container::command> &commands, std:
 		}	
             break;
         }
-        case cc::container::OPERATION::DELETE_THRU: {
+        case dff::container::OPERATION::DELETE_THRU: {
 		b0.erase(b0.begin() + (command._p0 - 1), b0.begin() + (command._p1 -1));
             break;
         }
@@ -106,9 +111,9 @@ static void check_book(const std::vector<cc::container::command> &commands, std:
     }
 }
 
-TEST_F(ccTest, CreateBookSnapshot)
+TEST_F(dffTest, CreateBookSnapshot)
 {
-    auto bookSnap = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bookSnap = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
     int pos = 0;
     for (const auto &value : *bookSnap)
     {
@@ -116,148 +121,148 @@ TEST_F(ccTest, CreateBookSnapshot)
     }
 }
 
-TEST_F(ccTest, GetDiffTwoBookEquals)
+TEST_F(dffTest, GetDiffTwoBookEquals)
 {
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
     EXPECT_EQ(commands.size(), 0);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, RemoveFirstPosition)
+TEST_F(dffTest, RemoveFirstPosition)
 {
     _b1.erase(_b1.begin());
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
     EXPECT_EQ(commands.size(), 1);
     check_book(commands, _b0, _b1);
 }
 
 
-TEST_F(ccTest, RemoveTwoPositions)
+TEST_F(dffTest, RemoveTwoPositions)
 {
     _b1.erase(_b1.begin() + 5);
     _b1.erase(_b1.begin() + 5);
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
     EXPECT_EQ(commands.size(), 1);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, InsertOnePosition)
+TEST_F(dffTest, InsertOnePosition)
 {
     _b1.insert(_b1.begin(), std::make_shared<Ordem>(10, 0.5));
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 1);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, InsertTwoPosition)
+TEST_F(dffTest, InsertTwoPosition)
 {
     _b1.insert(_b1.begin(), std::make_shared<Ordem>(10, 0.5));
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(11, 0.7));
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
 }
 
-TEST_F(ccTest, InsertTwoPositionRemoveOne)
+TEST_F(dffTest, InsertTwoPositionRemoveOne)
 {
     _b1.erase(_b1.begin());
     _b1.insert(_b1.begin(), std::make_shared<Ordem>(10, 0.5));
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(11, 0.7));
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 3);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, InsertTwoPositionMiddle)
+TEST_F(dffTest, InsertTwoPositionMiddle)
 {
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(10, 1.5));
     _b1.insert(_b1.begin() + 2, std::make_shared<Ordem>(11, 1.7));
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, InsertTwoPositionEnd)
+TEST_F(dffTest, InsertTwoPositionEnd)
 {
     _b1.insert(_b1.end() - 1, std::make_shared<Ordem>(10, 9.5));
     _b1.insert(_b1.end() - 1, std::make_shared<Ordem>(11, 9.7));
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, RemoveTwoPositionEnd)
+TEST_F(dffTest, RemoveTwoPositionEnd)
 {
     _b1.erase(_b1.end() - 1);
     _b1.erase(_b1.end() - 1);
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 1);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, InsertOneRemoveTwoPositionEnd)
+TEST_F(dffTest, InsertOneRemoveTwoPositionEnd)
 {
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(10, 1.5));
     _b1.erase(_b1.end() - 1);
     _b1.erase(_b1.end() - 1);
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, InsertOneRemoveOnePositionEnd)
+TEST_F(dffTest, InsertOneRemoveOnePositionEnd)
 {
     _b1.insert(_b1.begin() + 1, std::make_shared<Ordem>(10, 1.5));
     _b1.erase(_b1.end() - 1);
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     EXPECT_EQ(commands.size(), 2);
     check_book(commands, _b0, _b1);
 }
 
 
-TEST_F(ccTest, BounduarieTest)
+TEST_F(dffTest, BounduarieTest)
 {
 
     _b1.erase(_b1.begin());
@@ -265,15 +270,15 @@ TEST_F(ccTest, BounduarieTest)
     _b1.erase(_b1.end() - 1);
     _b1.insert(_b1.end() - 1, std::make_shared<Ordem>(11, 10.5));
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
    // EXPECT_EQ(commands.size(), 2);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, RemoveMiddle)
+TEST_F(dffTest, RemoveMiddle)
 {
 
     _b1.erase(_b1.begin() + 1);
@@ -284,15 +289,15 @@ TEST_F(ccTest, RemoveMiddle)
     _b1.erase(_b1.begin() + 1);
     _b1.erase(_b1.begin() + 1);
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
    // EXPECT_EQ(commands.size(), 2);
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, RemoveOddEntry)
+TEST_F(dffTest, RemoveOddEntry)
 {
     _b1.clear();
     _b0.clear();
@@ -305,15 +310,15 @@ TEST_F(ccTest, RemoveOddEntry)
          _b1.emplace_back(std::make_shared<Ordem>(*pos));
     }
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, RemoveOddEntryAndInsert)
+TEST_F(dffTest, RemoveOddEntryAndInsert)
 {
     _b1.clear();
     _b0.clear();
@@ -332,15 +337,15 @@ TEST_F(ccTest, RemoveOddEntryAndInsert)
         }
     }
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, RemoveOddEntryAndInsertTwo)
+TEST_F(dffTest, RemoveOddEntryAndInsertTwo)
 {
     _b1.clear();
     _b0.clear();
@@ -363,15 +368,15 @@ TEST_F(ccTest, RemoveOddEntryAndInsertTwo)
         }
     }
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, ReplaceBook)
+TEST_F(dffTest, ReplaceBook)
 {
     _b1.clear();
     _b0.clear();
@@ -385,15 +390,15 @@ TEST_F(ccTest, ReplaceBook)
         _b1.emplace_back(pos1);
     }
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     check_book(commands, _b0, _b1);
 }
 
-TEST_F(ccTest, ReplaceHalfEndBook)
+TEST_F(dffTest, ReplaceHalfEndBook)
 {
     _b1.clear();
     _b0.clear();
@@ -414,10 +419,10 @@ TEST_F(ccTest, ReplaceHalfEndBook)
         
     }
 
-    auto bs0 = std::make_shared<cc::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
-    auto bs1 = std::make_shared<cc::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
+    auto bs0 = std::make_shared<dff::container::Snapshot<Ordem>>(_b0.begin(), _b0.end());
+    auto bs1 = std::make_shared<dff::container::Snapshot<Ordem>>(_b1.begin(), _b1.end());
 
-    auto commands = cc::conflation::compute_diff<Ordem>(bs0, bs1);
+    auto commands = dff::algo::compute_diff<Ordem>(bs0, bs1);
 
     check_book(commands, _b0, _b1);
 }

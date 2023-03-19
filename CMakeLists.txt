@@ -1,10 +1,10 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
 
-project(sample)
+project(DataFusionFrenzy)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_subdirectory(src)
+add_subdirectory(include)
 
 option(PACKAGE_TESTS "Build the tests" ON)
 if(PACKAGE_TESTS)
@@ -15,6 +15,6 @@ endif()
 
 option(PACKAGE_BENCHMARK "Run benchmark" ON)
 if(PACKAGE_BENCHMARK)
-    add_subdirectory(extern)
+    add_subdirectory(submodules)
     add_subdirectory(benchmark)
 endif()

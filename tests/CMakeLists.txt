@@ -1,4 +1,4 @@
-add_subdirectory("${PROJECT_SOURCE_DIR}/extern/googletest" "extern/googletest")
+add_subdirectory("${PROJECT_SOURCE_DIR}/submodules/googletest" "submodules/googletest")
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -17,7 +17,7 @@ macro(package_add_test_with_libraries TESTNAME FILES LIBRARIES TEST_WORKING_DIRE
     set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
 endmacro()
 
-package_add_test_with_libraries(conflation_test conflation_tests.cpp conflation::conflation "")
+package_add_test_with_libraries(conflation_test conflation_tests.cpp dff::dataff "")
 
 if (CMAKE_COMPILER_IS_GNUCXX)
     include(CodeCoverage)
@@ -30,19 +30,19 @@ if (CMAKE_COMPILER_IS_GNUCXX)
     setup_target_for_coverage_gcovr_xml(
             NAME TestSampleCoverageXml
             EXECUTABLE conflation_test 
-            DEPENDENCIES conflation_test conflation::conflation 
+            DEPENDENCIES conflation_test dff::dataff
     )
     # Works
     setup_target_for_coverage_gcovr_html(
             NAME TestSampleCoverageHtml
             EXECUTABLE conflation_test 
-            DEPENDENCIES conflation_test conflation::conflation 
+            DEPENDENCIES conflation_test dff::dataff
     )
     # This one did not work for me:
     setup_target_for_coverage_lcov(
             NAME TestSampleCoverageLcov
             EXECUTABLE conflation_test 
-            DEPENDENCIES conflation_test conflation::conflation 
-            EXCLUDE "extern/*" "build/*" "/usr/*"
+            DEPENDENCIES conflation_test dff::dataff
+            EXCLUDE "submodules/*" "build/*" "/usr/*"
     )
 endif ()
