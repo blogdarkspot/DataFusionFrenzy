@@ -1,5 +1,3 @@
-add_subdirectory("${PROJECT_SOURCE_DIR}/submodules/googletest" "submodules/googletest")
-
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 set_target_properties(gtest PROPERTIES FOLDER extern)
@@ -10,6 +8,7 @@ set_target_properties(gmock_main PROPERTIES FOLDER extern)
 macro(package_add_test_with_libraries TESTNAME FILES LIBRARIES TEST_WORKING_DIRECTORY)
     add_executable(${TESTNAME} ${FILES})
     target_link_libraries(${TESTNAME} gtest gmock gtest_main ${LIBRARIES})
+    target_compile_features(${TESTNAME} PRIVATE cxx_std_17)
     gtest_discover_tests(${TESTNAME}
         WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY}
         PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${TEST_WORKING_DIRECTORY}"

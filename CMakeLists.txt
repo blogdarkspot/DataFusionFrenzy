@@ -13,7 +13,7 @@ if(PACKAGE_TESTS)
     add_subdirectory(tests)
 endif()
 
-option(PACKAGE_BENCHMARK "Run benchmark" ON)
+option(PACKAGE_BENCHMARK "Run benchmark" OFF)
 if(PACKAGE_BENCHMARK)
     add_subdirectory(submodules)
     add_subdirectory(benchmark)
