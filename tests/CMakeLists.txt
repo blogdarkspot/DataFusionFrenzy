@@ -1,47 +1,18 @@
-set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+# Defina a versão mínima do CMake
+cmake_minimum_required(VERSION 3.20)
+# Ativar o uso de testes com CTest
+enable_testing()
 
-set_target_properties(gtest PROPERTIES FOLDER extern)
-set_target_properties(gtest_main PROPERTIES FOLDER extern)
-set_target_properties(gmock PROPERTIES FOLDER extern)
-set_target_properties(gmock_main PROPERTIES FOLDER extern)
+# Forçar a versão mínima de CMake para o GoogleTest
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-macro(package_add_test_with_libraries TESTNAME FILES LIBRARIES TEST_WORKING_DIRECTORY)
-    add_executable(${TESTNAME} ${FILES})
-    target_link_libraries(${TESTNAME} gtest gmock gtest_main ${LIBRARIES})
-    target_compile_features(${TESTNAME} PRIVATE cxx_std_17)
-    gtest_discover_tests(${TESTNAME}
-        WORKING_DIRECTORY ${TEST_WORKING_DIRECTORY}
-        PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${TEST_WORKING_DIRECTORY}"
-    )
-    set_target_properties(${TESTNAME} PROPERTIES FOLDER tests)
-endmacro()
-
-package_add_test_with_libraries(conflation_test conflation_tests.cpp dff::dataff "")
-
-if (CMAKE_COMPILER_IS_GNUCXX)
-    include(CodeCoverage)
-    append_coverage_compiler_flags()
-
-    # optional excludes - None needed here
-    #    set(COVERAGE_EXCLUDES)
-
-    # Works
-    setup_target_for_coverage_gcovr_xml(
-            NAME TestSampleCoverageXml
-            EXECUTABLE conflation_test 
-            DEPENDENCIES conflation_test dff::dataff
-    )
-    # Works
-    setup_target_for_coverage_gcovr_html(
-            NAME TestSampleCoverageHtml
-            EXECUTABLE conflation_test 
-            DEPENDENCIES conflation_test dff::dataff
-    )
-    # This one did not work for me:
-    setup_target_for_coverage_lcov(
-            NAME TestSampleCoverageLcov
-            EXECUTABLE conflation_test 
-            DEPENDENCIES conflation_test dff::dataff
-            EXCLUDE "submodules/*" "build/*" "/usr/*"
-    )
-endif ()
+FetchContent_Declare(
+  googletest
+  GIT_REPOSITORY https://github.com/google/googletest.git
+  GIT_TAG        release-1.11.0  # A versão pode ser alterada conforme necessário
+)
+# Baixar e adicionar o GoogleTest como subdiretório
+FetchContent_MakeAvailable(googletest)
+add_executable(test conflation_tests.cpp)
+# Linkar o executável de teste com o GoogleTest e a biblioteca UMDFLib
+target_link_libraries(test PUBLIC gtest gtest_main Conflation)

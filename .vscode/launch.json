@@ -5,11 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "lldb",
+            "type": "cppdbg",
             "request": "launch",
             "name": "Exec Debug",
-            "program": "${workspaceFolder}/build/tests/conflation_test",
-            "args": []
+            "program": "${workspaceFolder}/build/tests/test",
+            "args": [],
+            "cwd": "${workspaceFolder}"
         },
         {
             "type": "lldb",
